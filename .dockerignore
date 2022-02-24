@@ -1,0 +1,28 @@
+# env file
+.env
+.env.example
+venv
+
+# Coding
+.git
+.idea
+.flake8
+
+# Serverless
+lambda_functions
+infrastructure
+.serverless
+
+# Testing files
+features
+tests
+htmlcov
+
+# Misc
+images
+sequence_diagrams
+
+Jenkinsfile
+
+# Generated
+_packageBuild

@@ -1,0 +1,80 @@
+version: "3.6"
+
+volumes:
+  name-service-pgdata:
+    name: name-service-pgdata
+
+  name-service-broker:
+    name: name-service-broker
+
+networks:
+  name-network:
+    name: name-network
+
+services:
+  api: &api
+    container_name: name-api
+    build: .
+    depends_on:
+      - db
+    volumes:
+      - .:/user/src/app
+      - /user/src/app/venv
+    ports:
+      - "8000:8000"
+    networks:
+      - name-network
+    env_file:
+      - .env
+    restart: always
+
+  db:
+    container_name: name-db
+    image: postgres:13.3-alpine
+    volumes:
+      - name-service-pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: my_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      ALLOW_IP_RANGE: "0.0.0.0/0"
+    command:
+      [
+          "postgres",
+          "-c",
+          "log_statement=all",
+          "-c",
+          "logging_collector=on",
+          "-c",
+          "log_directory=pg_logs",
+          "-c",
+          "log_filename=postgresql-%Y-%m-%d_%H%M%S.log",
+      ]
+    ports:
+      - "5432:5432"
+    networks:
+      - name-network
+    restart: always
+
+  redis:
+    container_name: name-redis
+    image: redis:6.2.6-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - name-service-broker:/var/lib/redis/data
+    networks:
+      - name-network
+
+  celery:
+    <<: *api
+    container_name: name-celery
+    depends_on:
+      - api
+      - db
+      - redis
+    ports:
+      - "8001:8000"
+    command: /start.sh worker
+    networks:
+      - name-network
+

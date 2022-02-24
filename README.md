@@ -1,1 +1,1 @@
-# django-api-template
+# authentication-service
